@@ -11,7 +11,6 @@ app.use(bodyParser.json())
 
 const sql = require('mssql')
 
-
 function useradd(req){
      sql.connect(config).then(pool=>{
         let request = new sql.Request(pool)
@@ -20,7 +19,9 @@ function useradd(req){
         request.input('nva_sicilismi',sql.NVarChar(sql.MAX),req.sicilismi)
         request.input('tarih',sql.DateTime,(req.tarih || req.zaman ))
         request.input('onofflie',sql.Bit,(req.onoff || 0))
+        request.input('hes',sql.NVarChar(150),'X')
         request.input('tablet',sql.NVarChar(50),req.tablet)
+        request.input('giriscikis',sql.NVarChar(1),req.giriscikis)
         request.execute('sp_noe_m_w_mrp_hareket_giriscikis_ekle').then((result)=>{
             return result
         }).catch(e=>{
@@ -39,6 +40,7 @@ function allAdd(req,tblt){
             request.input('tarih',sql.NVarChar(30),req.zaman.slice(0,-3))
             request.input('onofflie',sql.Bit,(req.onoff || 1))
             request.input('tablet',sql.NVarChar(50),tblt)
+            request.input('giriscikis',sql.NVarChar(1),req.giriscikis)
             request.execute('sp_noe_m_w_mrp_hareket_giriscikis_ekle').then((result)=>{
                 resolve({data:req ,status:true})
             }).catch(e=>{
@@ -48,24 +50,7 @@ function allAdd(req,tblt){
 
     })
 }
-// var mysql      = require('mysql');
 
-// var connection = mysql.createConnection({
-//     host     : 'localhost',
-//     user     : 'root',
-//     password : 'password',
-//     database : 'deneme',
-//     port: 3306,
-//     insecureAuth : true
-//   });
-
-
-// connection.connect();
- 
-// connection.query('SELECT * from kullanıcılar', function (error, results, fields) {
-//   if (error) throw error;
-//   console.log('The solution is: ', results[0]);
-// });
 
 app.post('/saveusers',(req,res)=>{
      var ss = req.body.arr.map((item)=> allAdd(item,
@@ -87,7 +72,7 @@ const io = new Server(sunucu);
 
 
 io.on('connection', (socket) => {
-    console.log('a user connected');
+    console.log('a user connected : ' + socket.id);
     socket.on('userAdd', (data) => {
         io.emit('message', JSON.stringify(data))
         // var datass = JSON.parse(data)
@@ -101,11 +86,28 @@ io.on('connection', (socket) => {
         console.log(data)
     })
     socket.on('disconnect',(data)=>{
-        console.log('Kullnıcı çıktı')
+        console.log('Kullnıcı çıktı : ' + socket.id)
     })
 });
 
+// var mysql      = require('mysql');
 
+// var connection = mysql.createConnection({
+//     host     : 'localhost',
+//     user     : 'root',
+//     password : 'password',
+//     database : 'deneme',
+//     port: 3306,
+//     insecureAuth : true
+//   });
+
+
+// connection.connect();
+ 
+// connection.query('SELECT * from kullanıcılar', function (error, results, fields) {
+//   if (error) throw error;
+//   console.log('The solution is: ', results[0]);
+// });
 
 
 
